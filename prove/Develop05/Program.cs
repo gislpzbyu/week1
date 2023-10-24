@@ -1,142 +1,243 @@
-/*using System;
+using System;
+using System.Collections.Generic;
+using System.IO;
+
+// Base class for goals
+class Goal
+{
+    public string Name { get; set; }
+    public int Points { get; set; }
+    public bool IsCompleted { get; set; }
+
+    public virtual void CompleteGoal()
+    {
+        IsCompleted = true;
+    }
+
+    public override string ToString()
+    {
+        return $"Goal: {Name} - Points: {Points} - Completed: {(IsCompleted ? "Yes" : "No")}";
+    }
+}
+
+// Derived class for simple goals
+class SimpleGoal : Goal
+{
+    public SimpleGoal(string name, int points)
+    {
+        Name = name;
+        Points = points;
+    }
+}
+
+// Derived class for eternal goals
+class EternalGoal : Goal
+{
+    public EternalGoal(string name, int points)
+    {
+        Name = name;
+        Points = points;
+    }
+}
+
+// Derived class for checklist goals
+class ChecklistGoal : Goal
+{
+    public int TargetCount { get; set; }
+    private int completedCount = 0;
+
+    public ChecklistGoal(string name, int points, int targetCount)
+    {
+        Name = name;
+        Points = points;
+        TargetCount = targetCount;
+    }
+
+    public override void CompleteGoal()
+    {
+        completedCount++;
+        if (completedCount == TargetCount)
+        {
+            IsCompleted = true;
+            Points += 500; // Bonus points for completing the checklist
+        }
+    }
+
+    public override string ToString()
+    {
+        return base.ToString() + $" - Completed {completedCount}/{TargetCount} times";
+    }
+}
+
+// User class to manage goals and score
+class User
+{
+    public List<Goal> Goals { get; set } = new List<Goal>();
+    public int Score { get; set } = 0;
+
+    public void RecordEvent(Goal goal)
+    {
+        if (!goal.IsCompleted)
+        {
+            goal.CompleteGoal();
+            Score += goal.Points;
+        }
+    }
+
+    public void SaveGoalsToFile(string fileName)
+    {
+        using (StreamWriter writer = new StreamWriter(fileName))
+        {
+            foreach (Goal goal in Goals)
+            {
+                writer.WriteLine($"{goal.GetType().Name}:{goal.Name}:{goal.Points}:{goal.IsCompleted}");
+            }
+        }
+    }
+
+    public void LoadGoalsFromFile(string fileName)
+    {
+        Goals.Clear();
+        using (StreamReader reader = new StreamReader(fileName))
+        {
+            string line;
+            while ((line = reader.ReadLine()) != null)
+            {
+                string[] parts = line.Split(':');
+                if (parts.Length == 4)
+                {
+                    string goalType = parts[0];
+                    string name = parts[1];
+                    int points = int.Parse(parts[2]);
+                    bool isCompleted = bool.Parse(parts[3]);
+
+                    Goal goal;
+                    if (goalType == nameof(SimpleGoal))
+                        goal = new SimpleGoal(name, points);
+                    else if (goalType == nameof(EternalGoal))
+                        goal = new EternalGoal(name, points);
+                    else if (goalType == nameof(ChecklistGoal))
+                        goal = new ChecklistGoal(name, points, 5); // Default target count
+                    else
+                        continue;
+
+                    goal.IsCompleted = isCompleted;
+                    Goals.Add(goal);
+                }
+            }
+        }
+    }
+}
 
 class Program
 {
     static void Main(string[] args)
     {
-        
-        Console.WriteLine("Hello Develop05 World!");
-    }
-}*/
+        User user = new User();
 
-using System;
-using System.Collections.Generic;
+        // Load previously saved goals (if any)
+        user.LoadGoalsFromFile("goals.txt");
 
-// Base class for all types of goals
-public abstract class Goal
-{
-    public string Name { get; set; }
-    public int Points { get; protected set; }
-    public bool IsComplete { get; protected set; }
-
-    public Goal(string name)
-    {
-        Name = name;
-        Points = 0;
-        IsComplete = false;
-    }
-
-    public virtual void RecordEvent()
-    {
-        Points += CalculatePoints();
-        CheckCompletion();
-    }
-
-    protected abstract int CalculatePoints();
-    protected abstract void CheckCompletion();
-}
-
-// Simple goal class
-public class SimpleGoal : Goal
-{
-    public int Value { get; private set; }
-
-    public SimpleGoal(string name, int value)
-        : base(name)
-    {
-        Value = value;
-    }
-
-    protected override int CalculatePoints()
-    {
-        return Points + Value;
-    }
-
-    protected override void CheckCompletion()
-    {
-        if (Points >= Value)
+        while (true)
         {
-            IsComplete = true;
+            Console.WriteLine("Eternal Quest - Goal Tracking Program");
+            Console.WriteLine("1. Create Goal");
+            Console.WriteLine("2. Record Event");
+            Console.WriteLine("3. Show Goals");
+            Console.WriteLine("4. Show Score");
+            Console.WriteLine("5. Save Goals");
+            Console.WriteLine("6. Exit");
+            Console.Write("Enter your choice: ");
+            int choice = int.Parse(Console.ReadLine());
+
+            switch (choice)
+            {
+                case 1:
+                    CreateGoal(user);
+                    break;
+                case 2:
+                    RecordEvent(user);
+                    break;
+                case 3:
+                    ShowGoals(user);
+                    break;
+                case 4:
+                    ShowScore(user);
+                    break;
+                case 5:
+                    user.SaveGoalsToFile("goals.txt");
+                    Console.WriteLine("Goals saved to 'goals.txt'");
+                    break;
+                case 6:
+                    Environment.Exit(0);
+                    break;
+                default:
+                    Console.WriteLine("Invalid choice. Please try again.");
+                    break;
+            }
         }
     }
-}
 
-// Eternal goal class
-public class EternalGoal : Goal
-{
-    public EternalGoal(string name)
-        : base(name)
+    static void CreateGoal(User user)
     {
-    }
+        Console.WriteLine("Create a Goal:");
+        Console.Write("Enter the goal name: ");
+        string name = Console.ReadLine();
+        Console.Write("Enter the goal type (Simple/Eternal/Checklist): ");
+        string goalType = Console.ReadLine();
+        Console.Write("Enter the points for this goal: ");
+        int points = int.Parse(Console.ReadLine());
 
-    protected override int CalculatePoints()
-    {
-        return 100; // Fixed points for an eternal goal
-    }
-
-    protected override void CheckCompletion()
-    {
-        // Eternal goals are never completed
-    }
-}
-
-// Checklist goal class
-public class ChecklistGoal : Goal
-{
-    public int TargetCount { get; private set; }
-    public int CompletedCount { get; private set; }
-
-    public ChecklistGoal(string name, int targetCount)
-        : base(name)
-    {
-        TargetCount = targetCount;
-        CompletedCount = 0;
-    }
-
-    public override void RecordEvent()
-    {
-        base.RecordEvent();
-        CompletedCount++;
-    }
-
-    protected override int CalculatePoints()
-    {
-        return 50; // Fixed points for a checklist goal
-    }
-
-    protected override void CheckCompletion()
-    {
-        if (CompletedCount >= TargetCount)
+        Goal goal;
+        if (goalType.Equals("Simple", StringComparison.OrdinalIgnoreCase))
+            goal = new SimpleGoal(name, points);
+        else if (goalType.Equals("Eternal", StringComparison.OrdinalIgnoreCase))
+            goal = new EternalGoal(name, points);
+        else if (goalType.Equals("Checklist", StringComparison.OrdinalIgnoreCase))
         {
-            IsComplete = true;
-            Points += 500; // Bonus points for completing a checklist goal
+            Console.Write("Enter the target count for the checklist goal: ");
+            int targetCount = int.Parse(Console.ReadLine());
+            goal = new ChecklistGoal(name, points, targetCount);
         }
-    }
-}
-
-public class Program
-{
-    static void Main()
-    {
-        // Create and manage goals
-        List<Goal> goals = new List<Goal>();
-        goals.Add(new SimpleGoal("Run a Marathon", 1000));
-        goals.Add(new EternalGoal("Read Scriptures"));
-        goals.Add(new ChecklistGoal("Attend Temple", 10));
-
-        // Simulate goal progress
-        foreach (Goal goal in goals)
+        else
         {
-            goal.RecordEvent();
+            Console.WriteLine("Invalid goal type. Goal not created.");
+            return;
         }
 
-        // Display goals and scores
-        Console.WriteLine("Goals:");
-        foreach (Goal goal in goals)
+        user.Goals.Add(goal);
+        Console.WriteLine("Goal created successfully!");
+    }
+
+    static void RecordEvent(User user)
+    {
+        Console.WriteLine("Record an Event (Goal Completion):");
+        Console.Write("Enter the goal name: ");
+        string name = Console.ReadLine();
+
+        Goal goal = user.Goals.Find(g => g.Name == name);
+        if (goal != null)
         {
-            string completionStatus = goal.IsComplete ? "[X]" : "[ ]";
-            string checklistProgress = (goal is ChecklistGoal checklist) ? $"Completed {checklist.CompletedCount}/{checklist.TargetCount} times" : "";
-            Console.WriteLine($"{completionStatus} {goal.Name} - Points: {goal.Points} {checklistProgress}");
+            user.RecordEvent(goal);
+            Console.WriteLine($"Event recorded. You earned {goal.Points} points!");
         }
+        else
+        {
+            Console.WriteLine("Goal not found. Please check the goal name.");
+        }
+    }
+
+    static void ShowGoals(User user)
+    {
+        Console.WriteLine("List of Goals:");
+        foreach (Goal goal in user.Goals)
+        {
+            Console.WriteLine(goal);
+        }
+    }
+
+    static void ShowScore(User user)
+    {
+        Console.WriteLine($"Current Score: {user.Score} points");
     }
 }
