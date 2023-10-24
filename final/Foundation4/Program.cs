@@ -27,8 +27,8 @@ class ExerciseTracker
 
 class Activity
 {
-    private DateTime Date { get; }
-    private int Minutes { get; }
+    public DateTime Date { get; }
+    public int Minutes { get; }
 
     public Activity(DateTime date, int minutes)
     {
@@ -59,7 +59,7 @@ class Activity
 
 class RunningActivity : Activity
 {
-    private double Distance { get; }
+    public double Distance { get; }
 
     public RunningActivity(DateTime date, int minutes, double distance) : base(date, minutes)
     {
@@ -89,7 +89,7 @@ class RunningActivity : Activity
 
 class CyclingActivity : Activity
 {
-    private double Speed { get; }
+    public double Speed { get; }
 
     public CyclingActivity(DateTime date, int minutes, double speed) : base(date, minutes)
     {
@@ -114,7 +114,7 @@ class CyclingActivity : Activity
 
 class SwimmingActivity : Activity
 {
-    private int Laps { get; }
+    public int Laps { get; }
 
     public SwimmingActivity(DateTime date, int minutes, int laps) : base(date, minutes)
     {

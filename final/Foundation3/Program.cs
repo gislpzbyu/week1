@@ -23,11 +23,11 @@ class Address
 
 class Event
 {
-    private string Title { get; set; }
-    private string Description { get; set; }
-    private DateTime Date { get; set; }
-    private string Time { get; set; }
-    private Address Location { get; set; }
+    public string Title { get; set; }
+    public string Description { get; set; }
+    public DateTime Date { get; set; }
+    public string Time { get; set; }
+    public Address Location { get; set; }
 
     public Event(string title, string description, DateTime date, string time, Address location)
     {
@@ -56,8 +56,8 @@ class Event
 
 class Lecture : Event
 {
-    private string Speaker { get; set; }
-    private int Capacity { get; set; }
+    public string Speaker { get; set; }
+    public int Capacity { get; set; }
 
     public Lecture(string title, string description, DateTime date, string time, Address location, string speaker, int capacity)
         : base(title, description, date, time, location)
@@ -79,7 +79,7 @@ class Lecture : Event
 
 class Reception : Event
 {
-    private string RSVP { get; set; }
+    public string RSVP { get; set; }
 
     public Reception(string title, string description, DateTime date, string time, Address location, string rsvp)
         : base(title, description, date, time, location)
@@ -100,7 +100,7 @@ class Reception : Event
 
 class OutdoorGathering : Event
 {
-    private string Weather { get; set; }
+    public string Weather { get; set; }
 
     public OutdoorGathering(string title, string description, DateTime date, string time, Address location, string weather)
         : base(title, description, date, time, location)

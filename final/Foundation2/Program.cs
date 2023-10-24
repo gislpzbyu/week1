@@ -3,10 +3,10 @@ using System.Collections.Generic;
 
 class Address
 {
-    private string streetAddress;
-    private string city;
-    private string stateProvince;
-    private string country;
+    public string streetAddress;
+    public string city;
+    public string stateProvince;
+    public string country;
 
     public Address(string streetAddress, string city, string stateProvince, string country)
     {
@@ -29,8 +29,8 @@ class Address
 
 class Customer
 {
-    private string name;
-    private Address address;
+    public string name;
+    public Address address;
 
     public Customer(string name, Address address)
     {
@@ -51,10 +51,10 @@ class Customer
 
 class Product
 {
-    private string name;
-    private string productId;
-    private decimal price;
-    private int quantity;
+    public string name;
+    public string productId;
+    public decimal price;
+    public int quantity;
 
     public Product(string name, string productId, decimal price, int quantity)
     {
@@ -77,8 +77,8 @@ class Product
 
 class Order
 {
-    private List<Product> products;
-    private Customer customer;
+    public List<Product> products;
+    public Customer customer;
 
     public Order(Customer customer)
     {

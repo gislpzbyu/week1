@@ -42,8 +42,8 @@ class Program
 
 class Scripture
 {
-    private List<Verse> verses;
-    private bool allWordsHidden;
+    public List<Verse> verses;
+    public bool allWordsHidden;
 
     public bool AllWordsHidden
     {
@@ -85,7 +85,7 @@ class Scripture
         CheckAllWordsHidden();
     }
 
-    private void CheckAllWordsHidden()
+    public void CheckAllWordsHidden()
     {
         allWordsHidden = verses.All(verse => verse.Words.All(word => word.IsHidden));
     }
@@ -99,7 +99,7 @@ class Scripture
 
 class Verse
 {
-    public List<Word> Words { get; private set; }
+    public List<Word> Words { get; public set; }
 
     public Verse(string verseReference)
     {
@@ -115,8 +115,8 @@ class Verse
 
 class Word
 {
-    public string Text { get; private set; }
-    public bool IsHidden { get; private set; }
+    public string Text { get; public set; }
+    public bool IsHidden { get; public set; }
 
     public Word(string text)
     {

@@ -1,131 +1,126 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 
-// Base class for goals
 class Goal
 {
-    public string Name { get; set; }
-    public int Points { get; set; }
-    public bool IsCompleted { get; set; }
+    protected string description;
+    protected int currentProgress;
+    protected int pointsAwarded;
 
-    public virtual void CompleteGoal()
+    public Goal(string description, int pointsAwarded)
     {
-        IsCompleted = true;
+        this.description = description;
+        this.pointsAwarded = pointsAwarded;
+        currentProgress = 0;
+    }
+
+    public virtual void MarkComplete()
+    {
+        currentProgress++;
+    }
+
+    public virtual bool IsComplete()
+    {
+        return false; // Base goals are never complete
+    }
+
+    public virtual string GetProgress()
+    {
+        return $"{currentProgress}/{pointsAwarded}";
+    }
+
+    public int GetPointsEarned()
+    {
+        return currentProgress * pointsAwarded;
     }
 
     public override string ToString()
     {
-        return $"Goal: {Name} - Points: {Points} - Completed: {(IsCompleted ? "Yes" : "No")}";
+        return $"{description} [{(IsComplete() ? "X" : " ")}] ({GetProgress()})";
     }
 }
 
-// Derived class for simple goals
 class SimpleGoal : Goal
 {
-    public SimpleGoal(string name, int points)
+    public SimpleGoal(string description, int pointsAwarded) : base(description, pointsAwarded)
     {
-        Name = name;
-        Points = points;
+    }
+
+    public override bool IsComplete()
+    {
+        return currentProgress > 0;
     }
 }
 
-// Derived class for eternal goals
 class EternalGoal : Goal
 {
-    public EternalGoal(string name, int points)
+    public EternalGoal(string description, int pointsAwarded) : base(description, pointsAwarded)
     {
-        Name = name;
-        Points = points;
     }
 }
 
-// Derived class for checklist goals
 class ChecklistGoal : Goal
 {
-    public int TargetCount { get; set; }
-    private int completedCount = 0;
+    public int requiredProgress;
 
-    public ChecklistGoal(string name, int points, int targetCount)
+    public ChecklistGoal(string description, int pointsAwarded, int requiredProgress) : base(description, pointsAwarded)
     {
-        Name = name;
-        Points = points;
-        TargetCount = targetCount;
+        this.requiredProgress = requiredProgress;
     }
 
-    public override void CompleteGoal()
+    public override void MarkComplete()
     {
-        completedCount++;
-        if (completedCount == TargetCount)
-        {
-            IsCompleted = true;
-            Points += 500; // Bonus points for completing the checklist
-        }
+        currentProgress++;
+        if (IsComplete())
+            currentProgress = 0;
     }
 
-    public override string ToString()
+    public override bool IsComplete()
     {
-        return base.ToString() + $" - Completed {completedCount}/{TargetCount} times";
+        return currentProgress >= requiredProgress;
     }
 }
 
-// User class to manage goals and score
-class User
+class QuestManager
 {
-    public List<Goal> Goals { get; set } = new List<Goal>();
-    public int Score { get; set } = 0;
+    public List<Goal> goals;
+    public int score;
+
+    public QuestManager()
+    {
+        goals = new List<Goal>();
+        score = 0;
+    }
+
+    public void AddGoal(Goal goal)
+    {
+        goals.Add(goal);
+    }
 
     public void RecordEvent(Goal goal)
     {
-        if (!goal.IsCompleted)
-        {
-            goal.CompleteGoal();
-            Score += goal.Points;
-        }
+        goal.MarkComplete();
+        score += goal.GetPointsEarned();
     }
 
-    public void SaveGoalsToFile(string fileName)
+    public int GetScore()
     {
-        using (StreamWriter writer = new StreamWriter(fileName))
-        {
-            foreach (Goal goal in Goals)
-            {
-                writer.WriteLine($"{goal.GetType().Name}:{goal.Name}:{goal.Points}:{goal.IsCompleted}");
-            }
-        }
+        return score;
     }
 
-    public void LoadGoalsFromFile(string fileName)
+    public List<Goal> GetGoals()
     {
-        Goals.Clear();
-        using (StreamReader reader = new StreamReader(fileName))
-        {
-            string line;
-            while ((line = reader.ReadLine()) != null)
-            {
-                string[] parts = line.Split(':');
-                if (parts.Length == 4)
-                {
-                    string goalType = parts[0];
-                    string name = parts[1];
-                    int points = int.Parse(parts[2]);
-                    bool isCompleted = bool.Parse(parts[3]);
+        return goals;
+    }
 
-                    Goal goal;
-                    if (goalType == nameof(SimpleGoal))
-                        goal = new SimpleGoal(name, points);
-                    else if (goalType == nameof(EternalGoal))
-                        goal = new EternalGoal(name, points);
-                    else if (goalType == nameof(ChecklistGoal))
-                        goal = new ChecklistGoal(name, points, 5); // Default target count
-                    else
-                        continue;
+    public void SaveGoalsToFile(string filename)
+    {
+        // Implement code to save goals to a file
+    }
 
-                    goal.IsCompleted = isCompleted;
-                    Goals.Add(goal);
-                }
-            }
-        }
+    public void LoadGoalsFromFile(string filename)
+    {
+        // Implement code to load goals from a file
     }
 }
 
@@ -133,111 +128,33 @@ class Program
 {
     static void Main(string[] args)
     {
-        User user = new User();
+        QuestManager questManager = new QuestManager();
 
-        // Load previously saved goals (if any)
-        user.LoadGoalsFromFile("goals.txt");
+        // Implement the user interface for creating, managing, and recording events for goals
 
-        while (true)
-        {
-            Console.WriteLine("Eternal Quest - Goal Tracking Program");
-            Console.WriteLine("1. Create Goal");
-            Console.WriteLine("2. Record Event");
-            Console.WriteLine("3. Show Goals");
-            Console.WriteLine("4. Show Score");
-            Console.WriteLine("5. Save Goals");
-            Console.WriteLine("6. Exit");
-            Console.Write("Enter your choice: ");
-            int choice = int.Parse(Console.ReadLine());
+        // Example:
+        SimpleGoal marathonGoal = new SimpleGoal("Run a Marathon", 1000);
+        questManager.AddGoal(marathonGoal);
 
-            switch (choice)
-            {
-                case 1:
-                    CreateGoal(user);
-                    break;
-                case 2:
-                    RecordEvent(user);
-                    break;
-                case 3:
-                    ShowGoals(user);
-                    break;
-                case 4:
-                    ShowScore(user);
-                    break;
-                case 5:
-                    user.SaveGoalsToFile("goals.txt");
-                    Console.WriteLine("Goals saved to 'goals.txt'");
-                    break;
-                case 6:
-                    Environment.Exit(0);
-                    break;
-                default:
-                    Console.WriteLine("Invalid choice. Please try again.");
-                    break;
-            }
-        }
-    }
+        EternalGoal scripturesGoal = new EternalGoal("Read Scriptures", 100);
+        questManager.AddGoal(scripturesGoal);
 
-    static void CreateGoal(User user)
-    {
-        Console.WriteLine("Create a Goal:");
-        Console.Write("Enter the goal name: ");
-        string name = Console.ReadLine();
-        Console.Write("Enter the goal type (Simple/Eternal/Checklist): ");
-        string goalType = Console.ReadLine();
-        Console.Write("Enter the points for this goal: ");
-        int points = int.Parse(Console.ReadLine());
+        ChecklistGoal templeGoal = new ChecklistGoal("Attend the Temple", 50, 10);
+        questManager.AddGoal(templeGoal);
 
-        Goal goal;
-        if (goalType.Equals("Simple", StringComparison.OrdinalIgnoreCase))
-            goal = new SimpleGoal(name, points);
-        else if (goalType.Equals("Eternal", StringComparison.OrdinalIgnoreCase))
-            goal = new EternalGoal(name, points);
-        else if (goalType.Equals("Checklist", StringComparison.OrdinalIgnoreCase))
-        {
-            Console.Write("Enter the target count for the checklist goal: ");
-            int targetCount = int.Parse(Console.ReadLine());
-            goal = new ChecklistGoal(name, points, targetCount);
-        }
-        else
-        {
-            Console.WriteLine("Invalid goal type. Goal not created.");
-            return;
-        }
-
-        user.Goals.Add(goal);
-        Console.WriteLine("Goal created successfully!");
-    }
-
-    static void RecordEvent(User user)
-    {
-        Console.WriteLine("Record an Event (Goal Completion):");
-        Console.Write("Enter the goal name: ");
-        string name = Console.ReadLine();
-
-        Goal goal = user.Goals.Find(g => g.Name == name);
-        if (goal != null)
-        {
-            user.RecordEvent(goal);
-            Console.WriteLine($"Event recorded. You earned {goal.Points} points!");
-        }
-        else
-        {
-            Console.WriteLine("Goal not found. Please check the goal name.");
-        }
-    }
-
-    static void ShowGoals(User user)
-    {
-        Console.WriteLine("List of Goals:");
-        foreach (Goal goal in user.Goals)
+        // Display the user's goals and current score
+        Console.WriteLine("Your Goals:");
+        foreach (var goal in questManager.GetGoals())
         {
             Console.WriteLine(goal);
         }
-    }
 
-    static void ShowScore(User user)
-    {
-        Console.WriteLine($"Current Score: {user.Score} points");
+        Console.WriteLine($"Current Score: {questManager.GetScore()}");
+
+        // Save and load goals as needed
+        questManager.SaveGoalsToFile("goals.txt");
+        questManager.LoadGoalsFromFile("goals.txt");
+
+        // Exceed requirements by adding creativity, e.g., adding levels, bonuses, or negative goals
     }
 }
