@@ -1,160 +1,150 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Xml.Serialization;
 
+[Serializable]
 class Goal
 {
-    protected string description;
-    protected int currentProgress;
-    protected int pointsAwarded;
+    public string Title { get; set; }
+    public string Description { get; set; }
+    public int Points { get; set; }
+    public bool IsComplete { get; set; }
 
-    public Goal(string description, int pointsAwarded)
+    public Goal(string title, string description, int points)
     {
-        this.description = description;
-        this.pointsAwarded = pointsAwarded;
-        currentProgress = 0;
-    }
-
-    public virtual void MarkComplete()
-    {
-        currentProgress++;
-    }
-
-    public virtual bool IsComplete()
-    {
-        return false; // Base goals are never complete
-    }
-
-    public virtual string GetProgress()
-    {
-        return $"{currentProgress}/{pointsAwarded}";
-    }
-
-    public int GetPointsEarned()
-    {
-        return currentProgress * pointsAwarded;
-    }
-
-    public override string ToString()
-    {
-        return $"{description} [{(IsComplete() ? "X" : " ")}] ({GetProgress()})";
-    }
-}
-
-class SimpleGoal : Goal
-{
-    public SimpleGoal(string description, int pointsAwarded) : base(description, pointsAwarded)
-    {
-    }
-
-    public override bool IsComplete()
-    {
-        return currentProgress > 0;
-    }
-}
-
-class EternalGoal : Goal
-{
-    public EternalGoal(string description, int pointsAwarded) : base(description, pointsAwarded)
-    {
-    }
-}
-
-class ChecklistGoal : Goal
-{
-    public int requiredProgress;
-
-    public ChecklistGoal(string description, int pointsAwarded, int requiredProgress) : base(description, pointsAwarded)
-    {
-        this.requiredProgress = requiredProgress;
-    }
-
-    public override void MarkComplete()
-    {
-        currentProgress++;
-        if (IsComplete())
-            currentProgress = 0;
-    }
-
-    public override bool IsComplete()
-    {
-        return currentProgress >= requiredProgress;
-    }
-}
-
-class QuestManager
-{
-    public List<Goal> goals;
-    public int score;
-
-    public QuestManager()
-    {
-        goals = new List<Goal>();
-        score = 0;
-    }
-
-    public void AddGoal(Goal goal)
-    {
-        goals.Add(goal);
-    }
-
-    public void RecordEvent(Goal goal)
-    {
-        goal.MarkComplete();
-        score += goal.GetPointsEarned();
-    }
-
-    public int GetScore()
-    {
-        return score;
-    }
-
-    public List<Goal> GetGoals()
-    {
-        return goals;
-    }
-
-    public void SaveGoalsToFile(string filename)
-    {
-        // Implement code to save goals to a file
-    }
-
-    public void LoadGoalsFromFile(string filename)
-    {
-        // Implement code to load goals from a file
+        Title = title;
+        Description = description;
+        Points = points;
+        IsComplete = false;
     }
 }
 
 class Program
 {
+    static List<Goal> goals = new List<Goal>();
+    static int totalScore = 0;
+
     static void Main(string[] args)
     {
-        QuestManager questManager = new QuestManager();
-
-        // Implement the user interface for creating, managing, and recording events for goals
-
-        // Example:
-        SimpleGoal marathonGoal = new SimpleGoal("Run a Marathon", 1000);
-        questManager.AddGoal(marathonGoal);
-
-        EternalGoal scripturesGoal = new EternalGoal("Read Scriptures", 100);
-        questManager.AddGoal(scripturesGoal);
-
-        ChecklistGoal templeGoal = new ChecklistGoal("Attend the Temple", 50, 10);
-        questManager.AddGoal(templeGoal);
-
-        // Display the user's goals and current score
-        Console.WriteLine("Your Goals:");
-        foreach (var goal in questManager.GetGoals())
+        bool running = true;
+        while (running)
         {
-            Console.WriteLine(goal);
+            Console.WriteLine("Menu Options:");
+            Console.WriteLine("1. Create a New Goal");
+            Console.WriteLine("2. List Goals");
+            Console.WriteLine("3. Save Goals");
+            Console.WriteLine("4. Load Goals");
+            Console.WriteLine("5. Record Event");
+            Console.WriteLine("6. Quit");
+
+            Console.WriteLine("Select a choice from the menu:");
+            int choice = Convert.ToInt32(Console.ReadLine());
+
+            switch (choice)
+            {
+                case 1:
+                    CreateNewGoal();
+                    break;
+                case 2:
+                    ListGoals();
+                    break;
+                case 3:
+                    SaveGoals();
+                    break;
+                case 4:
+                    LoadGoals();
+                    break;
+                case 5:
+                    RecordEvent();
+                    break;
+                case 6:
+                    running = false;
+                    break;
+                default:
+                    Console.WriteLine("Invalid choice. Please try again.");
+                    break;
+            }
         }
+    }
 
-        Console.WriteLine($"Current Score: {questManager.GetScore()}");
+    static void ListGoals()
+    {
+        Console.WriteLine("Your Goals:");
+        for (int i = 0; i < goals.Count; i++)
+        {
+            Console.WriteLine($"{i + 1}. {goals[i].Title} - {goals[i].Description} ({goals[i].Points} points) - Status: {goals[i].IsComplete}");
+        }
+    }
 
-        // Save and load goals as needed
-        questManager.SaveGoalsToFile("goals.txt");
-        questManager.LoadGoalsFromFile("goals.txt");
+    static void CreateNewGoal()
+    {
+        Console.WriteLine("The types of Goals are:");
+        Console.WriteLine("1. Simple Goal");
+        Console.WriteLine("2. Eternal Goal");
+        Console.WriteLine("3. Checklist Goal");
 
-        // Exceed requirements by adding creativity, e.g., adding levels, bonuses, or negative goals
+        Console.WriteLine("Which type of goal would you like to create?");
+        int type = Convert.ToInt32(Console.ReadLine());
+
+        Console.WriteLine("What is the name of your goal?");
+        string title = Console.ReadLine();
+
+        Console.WriteLine("What is a short description of it?");
+        string description = Console.ReadLine();
+
+        Console.WriteLine("What is the amount of points associated with this goal?");
+        int points = Convert.ToInt32(Console.ReadLine());
+
+        Goal newGoal = new Goal(title, description, points);
+        goals.Add(newGoal);
+
+        Console.WriteLine($"New goal '{newGoal.Title}' created.");
+    }
+
+    static void RecordEvent()
+    {
+        ListGoals();
+        Console.WriteLine("Enter the number of the goal you completed:");
+        int goalNumber = Convert.ToInt32(Console.ReadLine()) - 1;
+
+        if (goalNumber >= 0 && goalNumber < goals.Count)
+        {
+            Goal selectedGoal = goals[goalNumber];
+            selectedGoal.IsComplete = true;
+            totalScore += selectedGoal.Points;
+            Console.WriteLine($"You gained {selectedGoal.Points} points for completing '{selectedGoal.Title}'!");
+        }
+        else
+        {
+            Console.WriteLine("Invalid goal number.");
+        }
+    }
+
+    static void SaveGoals()
+    {
+        XmlSerializer serializer = new XmlSerializer(typeof(List<Goal>));
+        using (FileStream stream = new FileStream("goals.xml", FileMode.Create))
+        {
+            serializer.Serialize(stream, goals);
+        }
+        Console.WriteLine("Goals saved to 'goals.xml'.");
+    }
+
+    static void LoadGoals()
+    {
+        if (File.Exists("goals.xml"))
+        {
+            XmlSerializer serializer = new XmlSerializer(typeof(List<Goal>));
+            using (FileStream stream = new FileStream("goals.xml", FileMode.Open))
+            {
+                goals = (List<Goal>)serializer.Deserialize(stream);
+            }
+            Console.WriteLine("Goals loaded from 'goals.xml'.");
+        }
+        else
+        {
+            Console.WriteLine("No saved goals found.");
+        }
     }
 }
